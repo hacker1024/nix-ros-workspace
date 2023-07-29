@@ -1,0 +1,3 @@
+{
+  overlay = import ./overlay;
+}
