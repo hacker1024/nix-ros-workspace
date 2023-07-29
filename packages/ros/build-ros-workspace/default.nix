@@ -103,6 +103,12 @@ let
         ''
       }
 
+      # Explicitly set the Python executable used by colcon.
+      # By default, colcon will attempt to use the Python executable known at
+      # configure time, which does not make much sense in a Nix environment -
+      # if the Python derivation hash changes, the old one will still be used.
+      export COLCON_PYTHON_EXECUTABLE="${python}/bin/python"
+
       if [ -z "$NIX_EXECUTING_SHELL" ]; then
         eval "$(mk-workspace-shell-setup)"
       else
