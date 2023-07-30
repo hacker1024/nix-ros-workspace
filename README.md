@@ -46,7 +46,7 @@ development environments.
 , my-package-2
 }:
 
-buildROSWorkspace.explicit {
+buildROSWorkspace {
   name = "my";
   devPackages = [
     my-package-1
