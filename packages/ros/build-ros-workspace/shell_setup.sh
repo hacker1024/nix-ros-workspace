@@ -8,3 +8,6 @@ fi
 if command -v colcon &> /dev/null; then
   eval "$(@argcomplete@/bin/register-python-argcomplete colcon)"
 fi
+if command -v rosidl &> /dev/null; then
+  eval "$(@argcomplete@/bin/register-python-argcomplete rosidl)"
+fi
