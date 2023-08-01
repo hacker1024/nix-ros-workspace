@@ -28,7 +28,7 @@ issues.
 examples are designed to be invoked with [`callPackage`](https://nixos.org/guides/nix-pills/callpackage-design-pattern.html), e.g.
 `rosPackages.rolling.callPackage`.
 
-`buildROSWorkspace` takes a derivation name and two sets of packages.
+`buildROSWorkspace` takes a derivation name and several sets of packages.
 
 `devPackages` are packages that are under active development. They will be
 available in the release environment (`nix-build`), but in the development
@@ -38,6 +38,9 @@ available.
 `prebuiltPackages` are packages that are not under active development (typically
 third-party packages). They will be available in both the release and
 development environments.
+
+`prebuiltShellPackages` are packages that will get added only to the development
+shell environment. This is useful for build tools like GDB.
 
 ```nix
 { buildROSWorkspace

@@ -25,6 +25,7 @@ in
 
 , devPackages ? { }
 , prebuiltPackages ? { }
+, prebuiltShellPackages ? { }
 }@args:
 
 let
@@ -59,6 +60,12 @@ let
   rosPrebuiltPackages = splitRosPrebuiltPackages.right;
   otherPrebuiltPackages = splitRosPrebuiltPackages.wrong;
 
+  splitPrebuiltShellPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (prebuiltShellPackages);
+  rosPrebuiltShellPackages = splitPrebuiltShellPackages.right;
+  otherPrebuiltShellPackages = splitPrebuiltShellPackages.wrong;
+
+  # The shell packages are not included in these sets as they are used only in
+  # shell environments.
   rosPackages = rosDevPackages // rosPrebuiltPackages;
   otherPackages = otherDevPackages // otherPrebuiltPackages;
 
@@ -94,20 +101,27 @@ let
   # and dependencies available.
   env =
     let
-      rosEnv = buildROSEnv' { paths = builtins.attrValues rosPrebuiltPackages; };
+      rosEnv = buildROSEnv' {
+        paths =
+          builtins.attrValues rosPrebuiltPackages
+          ++ builtins.attrValues rosPrebuiltShellPackages;
+      };
     in
     mkShell {
       name = "${name}-workspace-env";
 
-      packages = (builtins.attrValues otherPrebuiltPackages) ++ [
-        rosEnv
+      packages =
+        builtins.attrValues otherPrebuiltPackages
+        ++ builtins.attrValues otherPrebuiltShellPackages
+        ++ [
+          rosEnv
 
-        # Add colcon, for building packages.
-        # This is a build tool that wraps other build tools, as does Nix, so it is
-        # not needed normally in any of the ROS derivations and must be manually
-        # added here.
-        colcon
-      ];
+          # Add colcon, for building packages.
+          # This is a build tool that wraps other build tools, as does Nix, so it is
+          # not needed normally in any of the ROS derivations and must be manually
+          # added here.
+          colcon
+        ];
 
       inputsFrom = builtins.attrValues devPackages;
 
