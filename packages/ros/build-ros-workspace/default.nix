@@ -114,10 +114,10 @@ let
       passthru =
         let
           devPackageEnvs = builtins.mapAttrs
-            (name: pkg: (buildROSWorkspace (args // {
+            (key: pkg: (buildROSWorkspace (args // {
               name = "${name}-env-for-${pkg.name}";
-              devPackages.${name} = pkg;
-              prebuiltPackages = args.prebuiltPackages // builtins.removeAttrs args.devPackages [ name ];
+              devPackages.${key} = pkg;
+              prebuiltPackages = args.prebuiltPackages // builtins.removeAttrs args.devPackages [ key ];
             })).env)
             devPackages;
         in
