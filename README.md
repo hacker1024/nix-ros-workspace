@@ -65,6 +65,8 @@ buildROSWorkspace {
 The following examples assume a `default.nix` exists, evaluating to the result
 of a `buildROSWorkspace` call.
 
+#### Building
+
 To build a workspace as a regular Nix package:
 
 ```
@@ -84,6 +86,8 @@ $ # Then, for example:
 $ ros2 pkg list
 ```
 
+#### Developing
+
 To enter a shell in the workspace development environment:
 
 ```
@@ -93,5 +97,19 @@ $ # Then, for example:
 $ cd ~/ros_ws
 $ colcon build
 ```
+
+`env` also includes a "sub-environment" for each package in `devPackages`. These
+environments are identical to the main environment, but all packages other than
+the specified one are moved into `prebuiltPackages`.
+
+In the example below, `my-package-1`'s build dependencies will be available as
+normal, but `my-package-2` will be available as if it were in `prebuiltPackages`.
+
+```
+$ nix-shell -A env.my-package-1
+```
+
+This is preferable to `nix-shell -A my-package-1`, as the former will include
+standard workspace tools and ROS 2 fixes.
 
 [lopsided98/nix-ros-overlay]: https://github.com/lopsided98/nix-ros-overlay

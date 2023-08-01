@@ -4,6 +4,7 @@
 , writeShellScriptBin
 , buildEnv
 , buildROSEnv
+, buildROSWorkspace
 , mkShell
 , python
 , colcon
@@ -24,7 +25,7 @@ in
 
 , devPackages ? { }
 , prebuiltPackages ? { }
-}:
+}@args:
 
 let
   partitionAttrs = pred: lib.foldlAttrs
@@ -110,9 +111,22 @@ let
 
       inputsFrom = builtins.attrValues devPackages;
 
-      passthru = {
-        inherit rosEnv;
-      };
+      passthru =
+        let
+          devPackageEnvs = builtins.mapAttrs
+            (name: pkg: (buildROSWorkspace (args // {
+              name = "${name}-env-for-${pkg.name}";
+              devPackages.${name} = pkg;
+              prebuiltPackages = args.prebuiltPackages // builtins.removeAttrs args.devPackages [ name ];
+            })).env)
+            devPackages;
+        in
+        {
+          inherit rosEnv;
+          for = devPackageEnvs;
+        }
+        # Pass through "for" attributes for CLI convenience.
+        // devPackageEnvs;
 
       shellHook = ''
         ${
