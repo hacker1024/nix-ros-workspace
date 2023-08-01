@@ -50,13 +50,16 @@ let
   };
 
   # Sort packages into various categories.
-  splitRosPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (standardPackages // devPackages // prebuiltPackages);
-  rosPackages = splitRosPackages.right;
-  otherPackages = splitRosPackages.wrong;
+  splitRosDevPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (devPackages);
+  rosDevPackages = splitRosDevPackages.right;
+  otherDevPackages = splitRosDevPackages.wrong;
 
-  splitRosPrebuiltPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (standardPackages // prebuiltPackages);
+  splitRosPrebuiltPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (prebuiltPackages // standardPackages);
   rosPrebuiltPackages = splitRosPrebuiltPackages.right;
   otherPrebuiltPackages = splitRosPrebuiltPackages.wrong;
+
+  rosPackages = rosDevPackages // rosPrebuiltPackages;
+  otherPackages = otherDevPackages // otherPrebuiltPackages;
 
   # The ROS overlay's buildEnv has special logic to wrap ROS packages so that
   # they can find each other.
