@@ -122,7 +122,7 @@ let
             devPackages;
         in
         {
-          inherit rosEnv;
+          inherit workspace rosEnv;
           for = devPackageEnvs;
         }
         # Pass through "for" attributes for CLI convenience.
