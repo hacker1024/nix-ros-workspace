@@ -28,7 +28,7 @@ issues.
 examples are designed to be invoked with [`callPackage`](https://nixos.org/guides/nix-pills/callpackage-design-pattern.html), e.g.
 `rosPackages.rolling.callPackage`.
 
-`buildROSWorkspace` takes a derivation name and two lists of packages.
+`buildROSWorkspace` takes a derivation name and two sets of packages.
 
 `devPackages` are packages that are under active development. They will be
 available in the release environment (`nix-build`), but in the development
@@ -48,13 +48,15 @@ development environments.
 
 buildROSWorkspace {
   name = "my";
-  devPackages = [
-    my-package-1
-    my-package-2
-  ];
-  extraPackages = [
-    rviz2
-  ];
+  devPackages = {
+    inherit
+      my-package-1
+      my-package-2;
+  };
+  extraPackages = {
+    inherit
+      rviz2;
+  };
 }
 ```
 

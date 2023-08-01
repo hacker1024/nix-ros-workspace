@@ -22,32 +22,39 @@ in
   # Configure the workspace for interactive use.
 , interactive ? true
 
-, devPackages ? [ ]
-, prebuiltPackages ? [ ]
+, devPackages ? { }
+, prebuiltPackages ? { }
 }:
 
 let
+  partitionAttrs = pred: lib.foldlAttrs
+    (t: key: value:
+      if pred key value
+      then { right = t.right // { ${key} = value; }; inherit (t) wrong; }
+      else { inherit (t) right; wrong = t.wrong // { ${key} = value; }; })
+    { right = { }; wrong = { }; };
+
   # Include standard packages in the workspace.
-  standardPackages = [
-    ros-core
-  ] ++ lib.optionals interactive ([
-    (writeShellScriptBin "mk-workspace-shell-setup"
+  standardPackages = {
+    inherit ros-core;
+  } // lib.optionalAttrs interactive {
+    workspace-shell-setup = writeShellScriptBin "mk-workspace-shell-setup"
       # The shell setup script is designed to be sourced.
       # By appearing to generate the script dynamically, this pattern is
       # enforced, as there is no file that can be executed by mistake.
       "cat ${substituteAll {
-            name = "workspace-shell-setup.sh";
-            src = ./shell_setup.sh;
-            inherit argcomplete;
-          }}")
-  ]);
+        name = "workspace-shell-setup.sh";
+        src = ./shell_setup.sh;
+        inherit argcomplete;
+      }}";
+  };
 
   # Sort packages into various categories.
-  splitRosPackages = builtins.partition (pkg: pkg.rosPackage or false) (standardPackages ++ devPackages ++ prebuiltPackages);
+  splitRosPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (standardPackages // devPackages // prebuiltPackages);
   rosPackages = splitRosPackages.right;
   otherPackages = splitRosPackages.wrong;
 
-  splitRosPrebuiltPackages = builtins.partition (pkg: pkg.rosPackage or false) (standardPackages ++ prebuiltPackages);
+  splitRosPrebuiltPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (standardPackages // prebuiltPackages);
   rosPrebuiltPackages = splitRosPrebuiltPackages.right;
   otherPrebuiltPackages = splitRosPrebuiltPackages.wrong;
 
@@ -60,11 +67,11 @@ let
   # include all packages in the environment.
   workspace =
     let
-      rosEnv = buildROSEnv' { paths = rosPackages; };
+      rosEnv = buildROSEnv' { paths = builtins.attrValues rosPackages; };
     in
     buildEnv {
       name = "${name}-workspace";
-      paths = [ rosEnv ] ++ otherPackages;
+      paths = [ rosEnv ] ++ builtins.attrValues otherPackages;
       passthru = {
         inherit
           env
@@ -83,12 +90,12 @@ let
   # and dependencies available.
   env =
     let
-      rosEnv = buildROSEnv' { paths = rosPrebuiltPackages; };
+      rosEnv = buildROSEnv' { paths = builtins.attrValues rosPrebuiltPackages; };
     in
     mkShell {
       name = "${name}-workspace-env";
 
-      packages = otherPrebuiltPackages ++ [
+      packages = (builtins.attrValues otherPrebuiltPackages) ++ [
         rosEnv
 
         # Add colcon, for building packages.
@@ -98,7 +105,7 @@ let
         colcon
       ];
 
-      inputsFrom = devPackages;
+      inputsFrom = builtins.attrValues devPackages;
 
       passthru = {
         inherit rosEnv;
