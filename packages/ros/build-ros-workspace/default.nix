@@ -114,8 +114,6 @@ let
         builtins.attrValues otherPrebuiltPackages
         ++ builtins.attrValues otherPrebuiltShellPackages
         ++ [
-          rosEnv
-
           # Add colcon, for building packages.
           # This is a build tool that wraps other build tools, as does Nix, so it is
           # not needed normally in any of the ROS derivations and must be manually
@@ -123,7 +121,7 @@ let
           colcon
         ];
 
-      inputsFrom = builtins.attrValues devPackages;
+      inputsFrom = [ rosEnv.env ] ++ builtins.attrValues devPackages;
 
       passthru =
         let
