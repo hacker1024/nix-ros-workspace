@@ -125,20 +125,33 @@ let
 
       passthru =
         let
-          devPackageEnvs = builtins.mapAttrs
+          forDevPackageEnvs = builtins.mapAttrs
             (key: pkg: (buildROSWorkspace (args // {
               name = "${name}-env-for-${pkg.name}";
               devPackages.${key} = pkg;
               prebuiltPackages = args.prebuiltPackages // builtins.removeAttrs args.devPackages [ key ];
             })).env)
             devPackages;
+          andDevPackageEnvs = builtins.mapAttrs
+            (key: pkg: (buildROSWorkspace (args // {
+              name = "${name}-env-and-${pkg.name}";
+              devPackages = args.devPackages // { ${key} = pkg; };
+              prebuiltPackages = builtins.removeAttrs args.prebuiltPackages [ key ];
+            })).env)
+            prebuiltPackages;
         in
         {
           inherit workspace rosEnv;
-          for = devPackageEnvs;
+
+          # Transforms the dev environment to include dependencies for only the selected package.
+          for = forDevPackageEnvs;
+
+          # Transforms the dev environment to include dependencies for the existing development packages and the selected package.
+          and = andDevPackageEnvs;
         }
-        # Pass through "for" attributes for CLI convenience.
-        // devPackageEnvs;
+        # Pass through "for" and "and" attributes for CLI convenience.
+        # They do not conflict, because "for" is generated from devPackages and "and" is generated from prebuiltPackages.
+        // forDevPackageEnvs // andDevPackageEnvs;
 
       shellHook = ''
         ${

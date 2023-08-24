@@ -101,6 +101,10 @@ $ cd ~/ros_ws
 $ colcon build
 ```
 
+##### Composition
+
+###### For
+
 `env` also includes a "sub-environment" for each package in `devPackages`. These
 environments are identical to the main environment, but all packages other than
 the specified one are moved into `prebuiltPackages`.
@@ -109,10 +113,37 @@ In the example below, `my-package-1`'s build dependencies will be available as
 normal, but `my-package-2` will be available as if it were in `prebuiltPackages`.
 
 ```
-$ nix-shell -A env.my-package-1
+$ nix-shell -A env.for.my-package-1
 ```
 
-This is preferable to `nix-shell -A my-package-1`, as the former will include
+###### And
+
+Often, it is useful to work with a subset of the `devPackages`. This can be done by
+using the `and` attributes, which move the selected `prebuiltPackages` back into the
+`devPackages`.
+
+For example, to work with both `my-package-1` and `my-package-2` as `devPackages`:
+
+```
+$ nix-shell -A env.for.my-package-1.and.my-package-2
+```
+
+The `.for.my-package-1` moves all but `my-package-1` into `prebuiltPackages`, and the
+`.and.my-package-2` brings `my-package-2` back.
+
+These techniques are preferable to `nix-shell -A my-package-1`, as the former will include
 standard workspace tools and ROS 2 fixes.
 
 [lopsided98/nix-ros-overlay]: https://github.com/lopsided98/nix-ros-overlay
+
+###### Shortcuts
+
+`for` and `and` can be left out. These two values are the same:
+
+```
+env.for.my-package-1.and.my-package-2
+```
+
+```
+env.my-package-1.my-package-2
+```
