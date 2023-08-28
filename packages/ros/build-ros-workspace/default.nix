@@ -36,6 +36,14 @@ let
       else { inherit (t) right; wrong = t.wrong // { ${key} = value; }; })
     { right = { }; wrong = { }; };
 
+  # Recursively finds required workspace sibling packages of the given package.
+  getWorkspacePackages = package:
+    let workspacePackages = package.workspacePackages or { };
+    in workspacePackages // getWorkspacePackages' workspacePackages;
+
+  # Recursively finds required workspace sibling packages of the given attribute set of packages.
+  getWorkspacePackages' = packages: builtins.foldl' (acc: curr: acc // getWorkspacePackages curr) { } (builtins.attrValues packages);
+
   # Include standard packages in the workspace.
   standardPackages = {
     inherit ros-core;
@@ -51,16 +59,21 @@ let
       }}";
   };
 
+  # Collate the standard and extra prebuilt package sets, and add any sibling packages that they require.
+  allPrebuiltPackages =
+    standardPackages // prebuiltPackages
+    // getWorkspacePackages' (standardPackages // prebuiltPackages // devPackages);
+
   # Sort packages into various categories.
   splitRosDevPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (devPackages);
   rosDevPackages = splitRosDevPackages.right;
   otherDevPackages = splitRosDevPackages.wrong;
 
-  splitRosPrebuiltPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (prebuiltPackages // standardPackages);
+  splitRosPrebuiltPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) allPrebuiltPackages;
   rosPrebuiltPackages = splitRosPrebuiltPackages.right;
   otherPrebuiltPackages = splitRosPrebuiltPackages.wrong;
 
-  splitPrebuiltShellPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (prebuiltShellPackages);
+  splitPrebuiltShellPackages = partitionAttrs (name: pkg: pkg.rosPackage or false) (prebuiltShellPackages // getWorkspacePackages' prebuiltShellPackages);
   rosPrebuiltShellPackages = splitPrebuiltShellPackages.right;
   otherPrebuiltShellPackages = splitPrebuiltShellPackages.wrong;
 

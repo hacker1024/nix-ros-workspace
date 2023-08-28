@@ -63,6 +63,32 @@ buildROSWorkspace {
 }
 ```
 
+#### Sibling dependencies
+
+Some packages expect other packages to be available in the workspace, without
+depending on them directly. Many launch files, for example, attempt to run
+arbitrary nodes and programs.
+
+To accomodate this, the `workspacePackages` passthru attribute is available.
+Packages added to this set will be detected by `buildROSWorkspace` and added to
+`prebuiltPackages`, along with any `workspacePackages` of their own.
+
+```nix
+{ buildRosPackage
+, xacro
+, gazebo-ros
+}:
+
+buildRosPackage {
+  # ...
+  passthru.workspacePackages = {
+    inherit
+      xacro
+      gazebo-ros;
+  };
+}
+```
+
 ### Command line
 
 The following examples assume a `default.nix` exists, evaluating to the result
