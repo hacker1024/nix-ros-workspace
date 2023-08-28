@@ -56,7 +56,7 @@ buildROSWorkspace {
       my-package-1
       my-package-2;
   };
-  extraPackages = {
+  prebuiltPackages = {
     inherit
       rviz2;
   };
