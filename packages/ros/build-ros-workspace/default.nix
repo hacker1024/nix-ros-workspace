@@ -94,7 +94,7 @@ let
       rosEnv = buildROSEnv' { paths = builtins.attrValues rosPackages; };
     in
     buildEnv {
-      name = "${name}-workspace";
+      name = "ros-${ros-core.rosDistro}-${name}-workspace";
       paths = [ rosEnv ] ++ builtins.attrValues otherPackages;
       passthru = {
         inherit
@@ -121,7 +121,7 @@ let
       };
     in
     mkShell {
-      name = "${name}-workspace-env";
+      name = "${workspace.name}-env";
 
       packages =
         builtins.attrValues otherPrebuiltPackages
