@@ -126,7 +126,7 @@ let
       packages =
         builtins.attrValues otherPrebuiltPackages
         ++ builtins.attrValues otherPrebuiltShellPackages
-        ++ [
+        ++ lib.optionals (rosDevPackages != { }) [
           # Add colcon, for building packages.
           # This is a build tool that wraps other build tools, as does Nix, so it is
           # not needed normally in any of the ROS derivations and must be manually
