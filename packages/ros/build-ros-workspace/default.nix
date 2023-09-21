@@ -114,12 +114,11 @@ let
   # and dependencies available.
   env =
     let
-      mkRosEnv = { paths ? [ ], ... }@args: buildROSEnv' (args // {
+      rosEnv = buildROSEnv' {
         paths =
-          paths
-            ++ builtins.attrValues rosPrebuiltPackages
-            ++ builtins.attrValues rosPrebuiltShellPackages;
-      });
+          builtins.attrValues rosPrebuiltPackages
+          ++ builtins.attrValues rosPrebuiltShellPackages;
+      };
     in
     mkShell {
       name = "${workspace.name}-env";
@@ -135,7 +134,7 @@ let
           colcon
         ];
 
-      inputsFrom = [ (mkRosEnv { wrapPrograms = false; }).env ] ++ builtins.attrValues devPackages;
+      inputsFrom = [ rosEnv.env ] ++ builtins.attrValues devPackages;
 
       passthru =
         let
@@ -155,8 +154,7 @@ let
             prebuiltPackages;
         in
         {
-          inherit workspace;
-          rosEnv = mkRosEnv { };
+          inherit workspace rosEnv;
 
           # Transforms the dev environment to include dependencies for only the selected package.
           for = forDevPackageEnvs;
