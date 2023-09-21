@@ -18,7 +18,7 @@ in
 
 {
   # The name of the workspace.
-  name
+  name ? "ros-workspace"
 
   # Configure the workspace for interactive use.
 , interactive ? true
