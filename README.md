@@ -8,8 +8,7 @@ To open a shell with ROS 2: Humble Hawksbill, `rviz2`, and `turtlesim`:
 
 ```console
 $ nix-shell \
-  --extra-substituters 'https://ros.cachix.org' \
-  --extra-trusted-public-keys 'ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=' \
+  --extra-substituters 'https://ros.cachix.org' --extra-trusted-public-keys 'ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=' \
   https://github.com/hacker1024/nix-ros-workspace/archive/master.tar.gz -A cli.env \
   --argstr distro humble \
   --argstr rosPackages 'rviz2 turtlesim'
@@ -19,8 +18,7 @@ Or, to build a derivation containing all of the above, use `nix-build` and remov
 
 ```console
 $ nix-build \
-  --extra-substituters 'https://ros.cachix.org' \
-  --extra-trusted-public-keys 'ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=' \
+  --extra-substituters 'https://ros.cachix.org' --extra-trusted-public-keys 'ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=' \
   https://github.com/hacker1024/nix-ros-workspace/archive/master.tar.gz -A cli \
   --argstr distro humble \
   --argstr rosPackages 'rviz2 turtlesim'
