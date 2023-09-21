@@ -18,7 +18,7 @@ issues.
 ## Setup
 
 1. Set up [lopsided98/nix-ros-overlay], ensuring that [PR #269](https://github.com/lopsided98/nix-ros-overlay/pull/269) is included.
-2. Add the overlay from this repository (`(import /path/to/repository).overlay`).
+2. Add the overlay from this repository (`(import /path/to/repository { }).overlay`).
 
 ## Usage
 

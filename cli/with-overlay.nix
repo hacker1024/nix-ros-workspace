@@ -4,5 +4,5 @@
 }@args:
 
 import nix-ros-overlay (args // {
-  overlays = [ (import ./overlay) ] ++ overlays;
+  overlays = [ (import ../overlay) ] ++ overlays;
 })
