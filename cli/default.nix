@@ -10,7 +10,7 @@ let
   parseList = list:
     if builtins.isList list
     then list
-    else pkgs.lib.splitString " " list;
+    else builtins.filter builtins.isString (builtins.split "[[:space:]]+" list);
 in
 rosPkgs.buildROSWorkspace {
   prebuiltPackages =
