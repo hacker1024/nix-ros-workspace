@@ -52,17 +52,21 @@ examples are designed to be invoked with [`callPackage`](https://nixos.org/guide
 
 `buildROSWorkspace` takes a derivation name and several sets of packages.
 
-`devPackages` are packages that are under active development. They will be
+- `devPackages` are packages that are under active development. They will be
 available in the release environment (`nix-build`), but in the development
 environment (`nix-shell`), only the build inputs of the packages will be
 available.
 
-`prebuiltPackages` are packages that are not under active development (typically
+- `prebuiltPackages` are packages that are not under active development (typically
 third-party packages). They will be available in both the release and
 development environments.
 
-`prebuiltShellPackages` are packages that will get added only to the development
+- `prebuiltShellPackages` are packages that will get added only to the development
 shell environment. This is useful for build tools like GDB.
+
+In order to set a default ROS domain ID, the `manualDomainId` argument can be
+set. This defaults to the value of the `NRWS_DOMAIN_ID` environment variable at
+evaluation time, or `0` if it is unset.
 
 ```nix
 { buildROSWorkspace

@@ -10,6 +10,8 @@
 , colcon
 , rmw-fastrtps-dynamic-cpp
 , ros-core
+
+, manualDomainId ? builtins.getEnv "NRWS_DOMAIN_ID"
 }:
 let
   inherit (python.pkgs)
@@ -29,6 +31,8 @@ in
 }@args:
 
 let
+  domainId = if manualDomainId == "" then 0 else manualDomainId;
+
   partitionAttrs = pred: lib.foldlAttrs
     (t: key: value:
       if pred key value
@@ -91,7 +95,12 @@ let
   # include all packages in the environment.
   workspace =
     let
-      rosEnv = buildROSEnv' { paths = builtins.attrValues rosPackages; };
+      rosEnv = buildROSEnv' {
+        paths = builtins.attrValues rosPackages;
+        postBuild = ''
+          rosWrapperArgs+=(--set-default ROS_DOMAIN_ID ${toString domainId})
+        '';
+      };
     in
     buildEnv {
       name = "ros-${ros-core.rosDistro}-${name}-workspace";
@@ -176,6 +185,9 @@ let
             export RMW_IMPLEMENTATION=rmw_fastrtps_dynamic_cpp
           ''
         }
+
+        # Set the domain ID.
+        export ROS_DOMAIN_ID=${toString domainId}
 
         # Explicitly set the Python executable used by colcon.
         # By default, colcon will attempt to use the Python executable known at
