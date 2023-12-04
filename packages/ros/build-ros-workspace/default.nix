@@ -2,7 +2,6 @@
 , substituteAll
 , runCommand
 , writeShellScriptBin
-, buildEnv
 , buildROSEnv
 , buildROSWorkspace
 , mkShell
@@ -86,35 +85,32 @@ let
   rosPackages = rosDevPackages // rosPrebuiltPackages;
   otherPackages = otherDevPackages // otherPrebuiltPackages;
 
-  # The ROS overlay's buildEnv has special logic to wrap ROS packages so that
-  # they can find each other.
-  # Unlike the regular buildEnv from Nixpkgs, however, it is designed only with
-  # nix-shell in mind, and propagates non-ROS packages rather than including
-  # them properly.
-  # We must use a combination of the ROS buildEnv and Nixpkgs buildEnv to
-  # include all packages in the environment.
-  workspace =
-    let
-      rosEnv = buildROSEnv' {
-        paths = builtins.attrValues rosPackages;
-        postBuild = ''
-          rosWrapperArgs+=(--set-default ROS_DOMAIN_ID ${toString domainId})
-        '';
-      };
-    in
-    buildEnv {
-      name = "ros-${ros-core.rosDistro}-${name}-workspace";
-      paths = [ rosEnv ] ++ builtins.attrValues otherPackages;
-      passthru = {
-        inherit
-          env
-          rosEnv
-          standardPackages
-          devPackages prebuiltPackages
-          rosPackages otherPackages;
-        inherit (ros-core) rosVersion rosDistro;
-      };
+  workspace = (buildROSEnv' {
+    paths = builtins.attrValues rosPackages;
+    postBuild = ''
+      rosWrapperArgs+=(--set-default ROS_DOMAIN_ID ${toString domainId})
+    '';
+  }).override ({ paths ? [ ], passthru ? { }, ... }: {
+    # Change the name from the default "ros-env".
+    name = "ros-${ros-core.rosDistro}-${name}-workspace";
+
+    # The ROS overlay's buildEnv has special logic to wrap ROS packages so that
+    # they can find each other.
+    # Unlike the regular buildEnv from Nixpkgs, however, it is designed only with
+    # nix-shell in mind, and propagates non-ROS packages rather than including
+    # them properly.
+    # We must therefore manually add the non-ROS packages to the environment.
+    paths = paths ++ builtins.attrValues otherPackages;
+
+    passthru = passthru // {
+      inherit
+        env
+        standardPackages
+        devPackages prebuiltPackages
+        rosPackages otherPackages;
+      inherit (ros-core) rosVersion rosDistro;
     };
+  });
 
   # The workspace shell environment includes non-dev packages as-is as well as
   # build inputs of dev packages.
