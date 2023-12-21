@@ -120,6 +120,7 @@ let
   env =
     let
       rosEnv = buildROSEnv' {
+        wrapPrograms = false;
         paths =
           builtins.attrValues rosPrebuiltPackages
           ++ builtins.attrValues rosPrebuiltShellPackages;
@@ -181,6 +182,19 @@ let
             export RMW_IMPLEMENTATION=rmw_fastrtps_dynamic_cpp
           ''
         }
+
+        # The ament setup hooks and propagated build inputs cause path variables
+        # to be set in strange orders.
+        # For example, it is common to end up with a regular Python executable
+        # in PATH taking priority over the wrapped ROS environment executable.
+        #
+        # Instead of wrapping executables, set the environment variables
+        # directly.
+        export LD_LIBRARY_PATH="${rosEnv}/lib:$LD_LIBRARY_PATH"
+        export PYTHONPATH="${rosEnv}/${python.sitePackages}:$PYTHONPATH"
+        export CMAKE_PREFIX_PATH="${rosEnv}:$CMAKE_PREFIX_PATH"
+        export AMENT_PREFIX_PATH="${rosEnv}:$AMENT_PREFIX_PATH"
+        export ROS_PACKAGE_PATH="${rosEnv}/share:$ROS_PACKAGE_PATH"
 
         # Set the domain ID.
         export ROS_DOMAIN_ID=${toString domainId}
