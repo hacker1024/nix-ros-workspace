@@ -9,13 +9,10 @@
 , colcon
 , rmw-fastrtps-dynamic-cpp
 , ros-core
+, workspace-autocomplete-setup
 
 , manualDomainId ? builtins.getEnv "NRWS_DOMAIN_ID"
 }:
-let
-  inherit (python.pkgs)
-    argcomplete;
-in
 
 {
   # The name of the workspace.
@@ -55,11 +52,7 @@ let
       # The shell setup script is designed to be sourced.
       # By appearing to generate the script dynamically, this pattern is
       # enforced, as there is no file that can be executed by mistake.
-      "cat ${substituteAll {
-        name = "workspace-shell-setup.sh";
-        src = ./shell_setup.sh;
-        inherit argcomplete;
-      }}";
+      "cat ${workspace-autocomplete-setup}";
   };
 
   # Collate the standard and extra prebuilt package sets, and add any sibling packages that they require.
