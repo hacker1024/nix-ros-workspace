@@ -78,7 +78,7 @@ let
   rosPackages = rosDevPackages // rosPrebuiltPackages;
   otherPackages = otherDevPackages // otherPrebuiltPackages;
 
-  workspace = (buildROSEnv' {
+  workspace = (buildROSEnv {
     paths = builtins.attrValues rosPackages;
     postBuild = ''
       rosWrapperArgs+=(--set-default ROS_DOMAIN_ID ${toString domainId})
@@ -112,7 +112,7 @@ let
   # and dependencies available.
   env =
     let
-      rosEnv = buildROSEnv' {
+      rosEnv = buildROSEnv {
         wrapPrograms = false;
         paths =
           builtins.attrValues rosPrebuiltPackages
@@ -166,16 +166,6 @@ let
         // forDevPackageEnvs // andDevPackageEnvs;
 
       shellHook = ''
-        ${
-          # While the modified version of buildROSEnv contains fixes for ROS
-          # packages in the buildROSEnv environment, these do not apply to packages
-          # that are being developed and built outside of Nix.
-          # The environment must be configured here as well.
-          ''
-            export RMW_IMPLEMENTATION=rmw_fastrtps_dynamic_cpp
-          ''
-        }
-
         # The ament setup hooks and propagated build inputs cause path variables
         # to be set in strange orders.
         # For example, it is common to end up with a regular Python executable
@@ -211,15 +201,5 @@ let
         fi
       '';
     };
-
-  # A modified version of buildROSEnv that works around
-  # lopsided98/nix-ros-overlay#45.
-  buildROSEnv' = { paths, postBuild ? "", ... }@args: buildROSEnv (args // {
-    paths = paths ++ [ rmw-fastrtps-dynamic-cpp ];
-    postBuild = ''
-      ${postBuild}
-      rosWrapperArgs+=(--set-default RMW_IMPLEMENTATION rmw_fastrtps_dynamic_cpp)
-    '';
-  });
 in
 workspace
