@@ -4,13 +4,41 @@ An opinionated builder for ROS workspaces using [lopsided98/nix-ros-overlay].
 
 ## Quickstart
 
-To open a shell with ROS 2: Humble Hawksbill, `rviz2`, and `turtlesim`:
+> [!WARNING]
+> To apply any substituter changes and allow binary downloads, you either need to run nix commands with `sudo`, add yourself to [`trusted-users`](https://nix.dev/manual/nix/2.33/command-ref/conf-file.html#conf-trusted-users), or add the cache as a trusted substiter in your Nix config.
+> 
+> The last option is by far the best, as adding yourself to `trusted-users` is a [massive security risk](https://github.com/NixOS/nix/issues/9649#issuecomment-1868001568).
+> However, if you don't apply substituter changes, all software will build locally the first time it's needed.
+
+### Flakes (recommended)
+
+To open a shell with ROS 2 "Jazzy Jalisco", `rviz2`, and `turtlesim` (configured in `flake.nix`):
+
+```console
+nix --extra-experimental-features "nix-command flakes" shell github:hacker1024/nix-ros-workspace#turtlesim
+```
+
+Once in the shell, run this to set up autocomplete:
+
+```console
+eval "$(mk-workspace-shell-setup)"
+```
+
+And to build the derivation:
+
+```console
+nix --extra-experimental-features "nix-command flakes" build github:hacker1024/nix-ros-workspace#turtlesim
+```
+
+### "Classic" Nix
+
+To open a shell with the same configuration as the flake:
 
 ```console
 $ nix-shell \
   --extra-substituters 'https://ros.cachix.org' --extra-trusted-public-keys 'ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=' \
   https://github.com/hacker1024/nix-ros-workspace/archive/master.tar.gz -A cli.env \
-  --argstr distro humble \
+  --argstr distro jazzy \
   --argstr rosPackages 'rviz2 turtlesim'
 ```
 
@@ -20,7 +48,7 @@ Or, to build a derivation containing all of the above, use `nix-build` and remov
 $ nix-build \
   --extra-substituters 'https://ros.cachix.org' --extra-trusted-public-keys 'ros.cachix.org-1:dSyZxI8geDCJrwgvCOHDoAfOm5sV1wCPjBkKL+38Rvo=' \
   https://github.com/hacker1024/nix-ros-workspace/archive/master.tar.gz -A cli \
-  --argstr distro humble \
+  --argstr distro jazzy \
   --argstr rosPackages 'rviz2 turtlesim'
 ```
 
@@ -39,34 +67,52 @@ issues.
 
 ## Setup
 
-1. Set up [lopsided98/nix-ros-overlay], ensuring that [PR #269](https://github.com/lopsided98/nix-ros-overlay/pull/269) is included.
+### Flakes
+
+1. Set up [lopsided98/nix-ros-overlay].
+2. Add this repository as a flake input.
+3. Apply the default overlay after `nix-ros-overlay`: `nix-ros-workspace.overlays.default`
+
+### "Classic" Nix
+
+1. Set up [lopsided98/nix-ros-overlay].
 2. Add the overlay from this repository (`(import /path/to/repository { }).overlay`).
 
 ## Usage
 
 ### API
 
-`buildROSWorkspace` is included in the ROS distro package sets. The following
-examples are designed to be invoked with [`callPackage`](https://nixos.org/guides/nix-pills/callpackage-design-pattern.html), e.g.
-`rosPackages.rolling.callPackage`.
+`buildROSWorkspace` is included in the ROS distro package sets.
+The following examples are designed to be invoked with [`callPackage`](https://nixos.org/guides/nix-pills/13-callpackage-design-pattern.html),
+e.g.  `rosPackages.rolling.callPackage`.
 
-`buildROSWorkspace` takes a derivation name and several sets of packages.
+#### Parameters
 
-- `devPackages` are packages that are under active development. They will be
-available in the release environment (`nix-build`), but in the development
-environment (`nix-shell`), only the build inputs of the packages will be
-available.
+`buildROSWorkspace` takes a derivation name, several sets of packages, and a few parameters to create the workspace:
 
-- `prebuiltPackages` are packages that are not under active development (typically
-third-party packages). They will be available in both the release and
-development environments.
+- `devPackages` (package set): Packages that are under active development.
+  They will be available in the release environment (`nix-build`),
+  but in the development environment (`nix-shell`), only the build inputs of the packages will be available.
+- `prebuiltPackages` (package set): Packages that are not under active development (typically third-party packages).
+  They will be available in both the release and development environments.
+- `prebuiltShellPackages` (package set): Packages that will get added only to the development shell environment.
+  This is useful for build tools like GDB.
+- `interactive` (boolean): Whether or not the workspace should be configured for interactive use.
+  Currently only includes the autocomplete script.
+- `releaseDomainId` (integer): Default ROS domain ID in the release environment.
+  Can be overridden using the `ROS_DOMAIN_ID` environment variable unless `forceReleaseDomainId` is set.
+- `environmentDomainId` (integer): Default ROS domain ID in the development environment.
+  Can be overridden using the `ROS_DOMAIN_ID` environment variable.
+- `forceReleaseDomainId` (boolean): Whether or not to allow the `ROS_DOMAIN_ID` environment variable to change the domain ID in the production environment.
+- `preShellHook` (string): String to insert at the start of the development environment's `shellHook`.
+- `postShellHook` (string): String to insert at the end of the development environment's `shellHook`.
+- `extraRosWrapperArgs` (string): Extra arguments to pass to the `makeWrapper` call for ROS executables.
 
-- `prebuiltShellPackages` are packages that will get added only to the development
-shell environment. This is useful for build tools like GDB.
+Both `releaseDomainId` and `environmentDomainId` will default to the value of the `NRWS_DOMAIN_ID` environment variable at evaluation time [^env-var], or `0` if it is unset.
 
-In order to set a default ROS domain ID, the `manualDomainId` argument can be
-set. This defaults to the value of the `NRWS_DOMAIN_ID` environment variable at
-evaluation time, or `0` if it is unset.
+[^env-var]: However, this requires impure evaluation to take effect.
+
+#### Examples
 
 ```nix
 { buildROSWorkspace

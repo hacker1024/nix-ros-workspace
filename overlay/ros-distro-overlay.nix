@@ -1,9 +1,8 @@
-self: super:
-rosSelf: rosSuper:
-
-{
-  buildROSWorkspace = rosSelf.callPackage ../packages/ros/build-ros-workspace {
-    buildROSEnv = rosSelf.buildEnv;
+final: prev: rosFinal: rosPrev: {
+  buildROSWorkspace = rosFinal.callPackage ../packages/ros/build-ros-workspace {
+    buildROSEnv = rosFinal.buildEnv;
   };
-  workspace-autocomplete-setup = rosSelf.callPackage ../packages/ros/workspace-autocomplete-setup { };
+  workspace-autocomplete-setup =
+    rosFinal.callPackage ../packages/ros/workspace-autocomplete-setup
+      { };
 }

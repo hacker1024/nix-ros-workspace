@@ -1,10 +1,10 @@
-{ replaceVars
-, python3Packages
+{
+  replaceVars,
+  python3Packages,
 }:
 
 let
-  inherit (python3Packages)
-    argcomplete;
+  inherit (python3Packages) argcomplete;
 in
 replaceVars ./setup.sh {
   inherit argcomplete;
