@@ -4,7 +4,7 @@
 , buildROSEnv
 , buildROSWorkspace
 , mkShell
-, python
+, python3
 , colcon
 , rmw-fastrtps-dynamic-cpp
 , ros-core
@@ -173,7 +173,7 @@ let
         # Instead of wrapping executables, set the environment variables
         # directly.
         export LD_LIBRARY_PATH="${rosEnv}/lib:$LD_LIBRARY_PATH"
-        export PYTHONPATH="${rosEnv}/${python.sitePackages}:$PYTHONPATH"
+        export PYTHONPATH="${rosEnv}/${python3.sitePackages}:$PYTHONPATH"
         export CMAKE_PREFIX_PATH="${rosEnv}:$CMAKE_PREFIX_PATH"
         export AMENT_PREFIX_PATH="${rosEnv}:$AMENT_PREFIX_PATH"
         export ROS_PACKAGE_PATH="${rosEnv}/share:$ROS_PACKAGE_PATH"
@@ -185,7 +185,7 @@ let
         # By default, colcon will attempt to use the Python executable known at
         # configure time, which does not make much sense in a Nix environment -
         # if the Python derivation hash changes, the old one will still be used.
-        export COLCON_PYTHON_EXECUTABLE="${python}/bin/python"
+        export COLCON_PYTHON_EXECUTABLE="${python3}/bin/python3"
 
         if [ -z "$NIX_EXECUTING_SHELL" ]; then
           eval "$(mk-workspace-shell-setup)"
